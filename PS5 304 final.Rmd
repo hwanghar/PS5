@@ -1,0 +1,213 @@
+---
+title: A NBA championship team is an insightful predictor of the number of All-Stars
+  it has on its team
+author: "Harry Hwang"
+date: "10/12/2020"
+  pdf_document: default
+  html_document: default
+  word_document: default
+Abstract: 'Each year, NBA fans either awaits their favorite team to defend their championship
+  throne, or awaits a new challenger to dethrone the old champion. In this report,
+  I run a logistic model to identify the factors that are impactful in determining
+  a NBA team''s chance of winning a NBA championship using the data observed from  NBA
+  seasons 1949-2020 from NBA''s official website, and basketball reference. From my
+  model, I find that the higher the number of All-Stars on a team, the more likley
+  that team will win a NBA championship. '
+---
+
+
+```{r, echo = FALSE, warning=F, message=F}
+
+
+#install.packages("tidyverse")
+#install.packages("cowplot")
+#install.packages("gtsummary")
+#install.packages("knitr")
+#install.packages("readxl")
+#install.packages("janitor")
+#install.packages("dplyr")
+#install.packages("stringr")
+#install.packages('tinytex')
+library(stringr)
+library(dplyr)
+library(tidyverse)
+library(cowplot)
+library(gtsummary)
+library(knitr)
+library(janitor)
+library(readxl)
+#library(xfun)
+#install.packages("xfun", type="binary")
+
+```
+
+
+
+```{r, echo =FALSE, warning=F, message=F}
+NBA1 <- read_excel("C:/Users/harry/Desktop/NBA1.xlsx")
+
+```
+
+
+#                                   Introduction
+
+In the United States,the world's largest and most iconic economical entity, everything is capitalized, commercialized, and materialized. Entertainments such as sports, takes a big part in the capitalized market. Basketball is one the most influential sports in U.S; across 2018-2019 season, basketball generated approximately over 10 billion dollars, to which 8.76 billion dollars are from the NBA, and 700 million dollars are from the NCAA, to name a few. It's no surprise that NBA is making so much revenue each year since a total viewership of 3.58 million people watched the 2018-2019 NBA regular season, and an incredible 15.1 million viewerships in the NBA finals. Every year, fans across the globe will love to watch NBA teams compete in the finals for the championship, so I have decided to create a model to predict the which team will likely win given the predictors. For explanatory variables I chose the regular season win rate, conference ranking, number of allstar players on the team, and whether the team has a MVP player for the championship run to decide the response variable - whether the team has won the ultimate NBA championship.
+
+#                                         Data
+The dataset I used is obtained from the NBA's official statistic website, and basketball reference ( https://www.nba.com/standings, https://www.basketball-reference.com/leagues/NBA_1950_standings.html). The targeted population is all the NBA teams that had won the championship from 1949-2020, because to determine the blueprint of winning, I will study the best teams that actually did it.
+
+#The number of allstar players on a championship team
+```{r ,echo=FALSE, message=F, warning=F}
+NBA1 %>% 
+  filter(NBA1$Won == 1) %>% 
+ggplot(aes(Allstars,  fill = Allstars)) +
+    geom_bar() +
+    theme_classic() +
+    labs(
+        x = "Number of Allstars ",
+        y = "count",
+        title = "championship teams' number of allstar",
+        fill = "Allstar"
+    ) + coord_flip()
+  
+  theme(axis.text.x = element_text(size = 8, angle = 45, hjust = 1),
+        plot.title = element_text(size=18))
+```
+
+The number of allstars of a team is very crucial in determining winning. Here, the graph shows te number of allstars all championship team has. Teams with 3 allstars won most of the NBA championships at around 30, whereas championship teams with 2 allstars make up the second most in counts, lastly, teams with 1 allstar won for the third most count, while teams with 4 allstars won the least. Usually three allstars takes up most of the salary cap of a team while still having some salary remaining for other positions and bench depth, 4 allstars will create too big of a salary burden to the team's overall depth. Having 4 allstar starters might crush the opponent in the first quarter, but when they rest on the bench, the opponent's backup players will make a comeback because the team with 4 allstars have barely any money for backups. 1 allstar is not enough, and 2 allstars is not convincing. 3 allstar is the optimal number a team should have in order to win a NBA championship.
+
+# Plot for proportion of the championship team that has a player who won regular season MVP
+```{r,echo=F, message=F, warning=F}
+
+# create new dataframe with proportions won a R.MVP
+R.MVP <- NBA1 %>% mutate(R.MVP = ifelse(Won==0, "Did not win championship",
+ifelse(R.MVP==0, "Did not win R.MVP", "Win R.MVP")))
+
+
+NBA1 %>% 
+  na.exclude(R.MVP) %>% 
+ggplot(aes( R.MVP,  fill = R.MVP)) +
+    geom_bar() +
+    theme_classic() +
+    labs(
+        x = "Win R.MVP",
+        y = "Percentage",
+        title = "championship team has a R.MVP?",
+        fill = "Won MVP?"
+    ) +
+  theme(axis.text.x = element_text(size = 8, angle = 45, hjust = 2),
+        plot.title = element_text(size=18))
+```
+It is worth noting that championship teams don't necessarily have a MVP player in the year they won the championship, as 62% of the championship teams don't have a MVP player, because basketball is a team sport, having only one MVP player without the help of other allstar caliber players won't lead to a championship.However, 30% of the championship teams do possess a MVP player,because a MVP player is the best of the best in the league, with a little bit of roster upgrade, the corresponding team will become a championship candidate. 
+
+
+#             Plot for championship teams' Conference ranking
+```{r, echo=F, message=F, warning=F}
+NBA1 %>% 
+  filter(NBA1$Won == 1) %>% 
+ggplot(aes( C.Rank,  fill = C.Rank)) +
+    geom_bar() +
+    theme_classic() +
+    labs(
+        x = "Conference ranking",
+        y = "count",
+        title = "championship teams' conference ranking",
+        fill = "ranking"
+    ) + coord_flip()+
+  theme(axis.text.x = element_text(size = 8, angle = 0, hjust = 2),
+        plot.title = element_text(size=18))
+```
+Shown by the graph, most of the Championship teams have conference ranking of 1st, while 2nd place make up the second most winning teams, and 3rd place makes the third most, and 4th place and 6th places makes up the lowest two portion of the championship teams. This indicates that higher the conference ranking, the higher the chance to win final NBA championship, because regular season is a test to teams that have the ambition to win it all, and it shed light on how far a team can proceed in playoffs.
+
+
+#              Plot for Championship teams' regular season record win rate
+```{r, echo=F message=F,warning=F}
+
+NBA1 %>% 
+  filter(NBA1$Won == 1) %>% 
+ggplot(aes(Win_Rate,  fill = Win_Rate)) +
+    geom_bar() +
+    theme_classic() +
+    labs(
+        x = "Regular Season Win rate",
+        y = "count",
+        title = "Champ teams' Regular season win rate",
+        fill = "Win rate"
+    ) + coord_flip() +
+  theme(axis.text.x = element_text(size = 8, angle = 0, hjust = 2),
+        plot.title = element_text(size=18))
+```
+From the graph, most of the championship team has regular season win rate of about 70% to 77%,winning about 57.4 games to 63.14 games while some have over 80%, that is winning 65.6 games in regular season. The more games won, the higher the conference ranking, and higher win rate epitomizes its dominance of the league. Some bias of this data is that, before 1970, the NBA only had 72 games, and during 1999 and 2011 the number of games played was also decreased due to lockout. Shrinking in season creates bias in the data, because players might have more time to rest and are more prepared for the finals.
+
+#                                         Model
+
+$$log \left( \frac{\hat{p}}{1-\hat{p}} \right) = \beta_1 + \beta_2*x_{win_rate} + \beta_3*x_{R.MVP?} + \beta_4*x_{Allstar} + \beta_5*x_{C.Rank}$$
+
+The $\beta$ in my equation from the model represents four different coefficients to four unique explanatory variables x representing the predictor that will impact the outcome of whether a team wins a NBA championship. For binary variables such as R.MVP, it is either 1 for yes or 0 for no, so if a championship team has a player that won regular season MVP then that $\beta$ will be 1 otherwise it will be 0. Also, the $\beta$ for number of Allstars, it is just multiplied by how many Allstar the Championship team has,which uses numerical values. $\hat{p}$ represent the probability a team has won the NBA championship and $log$ represents the natural logarithm.
+
+
+Instead of using linear regression, I have used logistic regression as it provides a curved line to correlate the binomial explanatory variables with the response variable of interest, that is whether or not the team won the championship.
+```{r ,echo=FALSE, message=F, warning=F}
+
+NBA1 <- NBA1 %>% 
+  select(Won, Allstars,
+         C.Rank, R.MVP, Win_Rate)
+NBA1 <- na.omit(NBA1)
+
+
+mylogit_NBA <- glm(Won ~ Allstars + C.Rank + factor(R.MVP) + Win_Rate, family="binomial", data=NBA1)
+  
+summary(mylogit_NBA)
+
+```
+
+
+#                                        Results
+
+Figure 5: Basic Output of Logistic Regression Model
+# The result table of my model
+
+```{r ,echo=FALSE, message=F, warning=F}
+mylogit_NBA <- broom::tidy(mylogit_NBA, conf.int = T)
+kable(mylogit_NBA)
+```
+
+
+From the graphs and results, I found out that the logit function is 
+
+$$log \left( \frac{\hat{p}}{1-\hat{p}} \right) = -3.967 + 1.71*x_{Allstars}
+-0.2217*x_{C.Rank} +1.0102*x_{R.MVP} + 4.7279*x_{Winrate}$$  
+
+For one unit increase in explanatory variable allstars, the response variable increase by 1.71, for 1 unit decrease in Conference ranking, the response varible decrease by 0.2217, for 1 unit increase in R.MVP, the response variable increase by 1.0102, for 1 unit increase in regular season win rates, the response variable increase by 4.7279. So from our results the most significant explanatory variable to impact winning the championship is the regular season win rate and record, because not only is it correlated to conference ranking, but it also indicates how well a team go against the rest of the league, whereas increasing the number of allstars will also increase the chance of winning, by 1.71 positively correlated. 
+
+The output is generalized logistic regression, so unlike linear regression, it is curved and R.MVP explanatory variable is binomial 0 and 1, each change in each exlanatory variable will affect overall combination of the probability of other variables. 
+
+Due to the fact that the dataset is too small, so the variance and spread is very large, causing the P-value to be big and not significant. It is also one of the limitations of this report. In the future I will want to be able to conduct a research on datasets over 2000 observational data.
+
+
+
+
+#                              Discussion and analysis
+
+There are some bias in the dataset observed. During the 1998, there was an NBA lockdown which no NBA all-star game was held, and there was no all-star game in 1950 because the first all-star game was held on 1951, so for the teams that won championship during those two years, the data shows that they have zero all stars on their team, but in reality, they do have all-star caliber players, but it is just that no all-star selection was made. And during 1998, the lockdown was attributable to the fact that players weren't satisfied with new salary cap. The event of the lockout shrank the number of games played in the regular season, which means it affected the record and coefficient for winning percentage of the championship team in 1998-1999, which is the LA Lakers.Also, another lockout happened in 2011; it didn't delay the process of NBA All-star selections, but it shrank the regular season once again, making the data observed biased, and affecting the regular season winning percentages coefficient for championship team that year.Also, the MVP awards didn't start until the year 1955, so for the championship team that won in 1950-1954, the data is missing and remains as a puzzle, and making it a biased for the MVP dataset. Overall, the coefficient for regular season conference ranking, number of all stars and whether the championship team has a regular season MVP player all positively correlates to the outcome of whether a team wins a championship, but the explanatory variable - number of all star players happen to affect the outcome the least. 
+
+
+#                     Weakness and improvements in the future
+
+Due to the fact that the dataset is too small, so the variance and spread is very large, causing the P-value to be big and not significant. It is also one of the limitations of this report. In the future I will want to be able to conduct a research on datasets over 2000 observational data. Also because the dataset is small and limited, I cannot perform Poststratification to the dataset.
+
+
+# Appendix 
+# Citations and References 
+
+1.https://www.washingtonpost.com/graphics/sports/ncaa-money/#:~:text=The%20men's%20basketball%20tournament%20basically,largest%20piece%20of%20that%20distribution.
+
+2.https://www.statista.com/statistics/193467/total-league-revenue-of-the-nba-since-2005/#:~:text=In%20the%202018%2F19%20season,about%208.76%20billion%20U.S.%20dollars.&text=The%20teams%20of%20the%20NBA,dollars%20in%20the%202018%2F19.
+
+3.https://www.basketball-reference.com/leagues/NBA_1950_standings.html
+
+4.https://basketball.realgm.com/nba/allstar/game/rosters/1951
+
+5.https://www.nba.com/standings
+
+
